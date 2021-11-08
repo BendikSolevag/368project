@@ -14,3 +14,7 @@ def get_nor_bert(tokenizer="sentiment-analysis"):
 
 def get_nb_bert(tokenizer="sentiment-analysis"):
     return pipeline(tokenizer, model='NbAiLab/nb-bert-base-mnli')
+
+
+def get_mbert(tokenizer="sentiment-analysis"):
+    return pipeline(tokenizer, model='bert-base-multilingual-cased')
