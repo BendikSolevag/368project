@@ -15,8 +15,8 @@ def get_nor_bert(num_labels, task="sentiment-analysis", model_type=BertForTokenC
 
 
 def get_nb_bert(num_labels, task="sentiment-analysis", model_type=BertForTokenClassification):
-    tokenizer = AutoTokenizer.from_pretrained('NbAiLab/nb-bert-base-mnli')
-    model = model_type.from_pretrained('NbAiLab/nb-bert-base-mnli', num_labels=num_labels)
+    tokenizer = AutoTokenizer.from_pretrained('NbAiLab/nb-bert-base')
+    model = model_type.from_pretrained('NbAiLab/nb-bert-base', num_labels=num_labels)
     return pipeline(task, tokenizer=tokenizer, model=model)
 
 
