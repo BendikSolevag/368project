@@ -1,5 +1,6 @@
 import inquirer
 import tokenClassification
+import sentence_level_sentiment_polarity
 
 def sequence_classification():
     questions = [
@@ -12,7 +13,7 @@ def sequence_classification():
     print('Performing ', answers['benchmark'], ', this may take a while.')
     
     if answers['benchmark'] == 'Sentence-level sentiment polarity':
-        exec(open('./sentence_level_sentiment_polarity.py').read())
+        sentence_level_sentiment_polarity.run()
 
     if answers['benchmark'] == 'Dialect classification':
         exec(open('./DialectClassification.py').read())
