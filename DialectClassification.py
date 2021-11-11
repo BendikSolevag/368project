@@ -11,6 +11,7 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 tag_values = ['bokmål', 'nynorsk', 'dialekt', 'mixed']
 
 
+
 def tag_to_index(x):
     if x == 'bokmål':
         return 0
@@ -41,9 +42,11 @@ class SentimentPolarityDataset(torch.utils.data.Dataset):
 
 def fetch_datasets():
     """
-    Fetches the data and formats it to trainable torch tensors
-    :return: trainable torch tensors for all three models
+    Fetches data from the /Data directory. Parses labels, tokenizes inputs. Loads data into a custom pytorch Dataset
+        Returns:
+            Six SentinentPolarityDataset datasets.
     """
+
     with open('Data/dialect_classification/dialect_tweet_train.json', 'r', encoding="utf-8") as data:
         dialect_data = json.load(data)
         train_texts = [datapoint['text'] for datapoint in dialect_data]
@@ -79,13 +82,16 @@ def fetch_datasets():
     return nor_bert_train_dataset, nb_bert_train_dataset, mbert_train_dataset, nor_bert_test_dataset, nb_bert_test_dataset, mbert_test_dataset
 
 
-def tune(model, optim, dataset, testdata):
+def tune(model, optim, dataset):
     """
-    Train the model
+    Trains a given model on the given dataset using the given optimizer.
+        Parameters:
+            model (pytorch model): The model we want to train.
+            optim (pytoch optimizer): The optimizer we wish to use.
+            dataset (pytorch dataset): The dataset we wish to tune our model to.
     """
     loader = DataLoader(dataset, batch_size=16, shuffle=True)
     model.train()
-    # Training loop
     for epoch in range(32):
         for batch in tqdm(loader):
             optim.zero_grad()
@@ -102,14 +108,18 @@ def tune(model, optim, dataset, testdata):
 
 def eval(model, dataset):
     """
-    Evaluate the model on testing data
+    Evaluates given model on given dataset.
+        Params:
+            model (pytorch model): The model we wish to evaluate.
+            dataset (pytorch dataset): The dataset used to evaluate the model.
+        Returns:
+            F1 score and accuracy of the given model on the given dataset.
     """
     loader = DataLoader(dataset, batch_size=8, shuffle=True)
     model.eval()
     eval_loss, eval_accuracy = 0, 0
     predictions, true_labels = [], []
     testing_loss_values = []
-
     for batch in tqdm(loader):
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
@@ -117,9 +127,15 @@ def eval(model, dataset):
 
         with torch.no_grad():
             outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
+        # Move logits and labels to CPU
         logits = outputs[1].detach().cpu().numpy()
         label_ids = labels.to('cpu').numpy()
+
+        # Calculate the accuracy for this batch of test sentences.
         eval_loss += outputs[0].mean().item()
+
+
+
         predictions.extend(np.argmax(logits, axis=1))
         true_labels.extend(label_ids)
 
