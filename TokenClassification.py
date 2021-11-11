@@ -371,6 +371,3 @@ def run():
     for name in f1_scores:
         with open("results/token_classification" + name + "_" + ans, 'w') as file:
             file.write("F1 score:" + str(f1_scores[name] + " accuracy: " + str(acc_scores[name])))
-
-
-run()

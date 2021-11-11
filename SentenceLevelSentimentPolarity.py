@@ -22,7 +22,8 @@ def number_sentiment(sentiment):
         return 1
     return 0
 
-class SentinentPolarityDataset(torch.utils.data.Dataset):
+
+class SentimentPolarityDataset(torch.utils.data.Dataset):
     def __init__(self, encodings, labels):
         self.encodings = encodings
         self.labels = labels
@@ -35,22 +36,18 @@ class SentinentPolarityDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.labels)
 
+
 def fetch_datasets():
     """
     Fetches data from the /Data directory. Parses labels, tokenizes inputs. Loads data into a custom pytorch Dataset 
         Returns:
-            Six SentinentPolarityDataset datasets.
+            Six SentimentPolarityDataset datasets.
     """
 
     with open('./Data/sentence_level_sentiment_polarity/train.json') as polarity_data:
         polarity_array = json.load(polarity_data)[:5]
         train_texts = [datapoint['text'] for datapoint in polarity_array]
         train_labels = [number_sentiment(datapoint['label']) for datapoint in polarity_array]
-        
-    with open('./Data/sentence_level_sentiment_polarity/val.json') as polarity_data:
-        polarity_array = json.load(polarity_data)[:5]
-        val_texts = [datapoint['text'] for datapoint in polarity_array]
-        val_labels = [number_sentiment(datapoint['label']) for datapoint in polarity_array]
         
     with open('./Data/sentence_level_sentiment_polarity/test.json') as polarity_data:
         polarity_array = json.load(polarity_data)[:5]
@@ -63,31 +60,22 @@ def fetch_datasets():
     nb_bert_tokenizer = AutoTokenizer.from_pretrained('NbAiLab/nb-bert-base')
     mbert_tokenizer = AutoTokenizer.from_pretrained('bert-base-multilingual-cased')
 
-
     nor_bert_train_encodings = nor_bert_tokenizer(train_texts, truncation=True, padding=True)
     nb_bert_train_encodings = nb_bert_tokenizer(train_texts, truncation=True, padding=True)
     mbert_train_encodings = mbert_tokenizer(train_texts, truncation=True, padding=True)
-
-    nor_bert_val_encodings = nor_bert_tokenizer(val_texts, truncation=True, padding=True)
-    nb_bert_val_encodings = nb_bert_tokenizer(val_texts, truncation=True, padding=True)
-    mbert_val_encodings = mbert_tokenizer(val_texts, truncation=True, padding=True)
 
     nor_bert_test_encodings = nor_bert_tokenizer(test_texts, truncation=True, padding=True)
     nb_bert_test_encodings = nb_bert_tokenizer(test_texts, truncation=True, padding=True)
     mbert_test_encodings = mbert_tokenizer(test_texts, truncation=True, padding=True)
 
+    nor_bert_train_dataset = SentimentPolarityDataset(nor_bert_train_encodings, train_labels)
+    nb_bert_train_dataset = SentimentPolarityDataset(nb_bert_train_encodings, train_labels)
+    mbert_train_dataset = SentimentPolarityDataset(mbert_train_encodings, train_labels)
 
-    nor_bert_train_dataset = SentinentPolarityDataset(nor_bert_train_encodings, train_labels)
-    nb_bert_train_dataset = SentinentPolarityDataset(nb_bert_train_encodings, train_labels)
-    mbert_train_dataset = SentinentPolarityDataset(mbert_train_encodings, train_labels)
-
-    nor_bert_test_dataset = SentinentPolarityDataset(nor_bert_test_encodings, test_labels)
-    nb_bert_test_dataset = SentinentPolarityDataset(nb_bert_test_encodings, test_labels)
-    mbert_test_dataset = SentinentPolarityDataset(mbert_test_encodings, test_labels)
+    nor_bert_test_dataset = SentimentPolarityDataset(nor_bert_test_encodings, test_labels)
+    nb_bert_test_dataset = SentimentPolarityDataset(nb_bert_test_encodings, test_labels)
+    mbert_test_dataset = SentimentPolarityDataset(mbert_test_encodings, test_labels)
     return nor_bert_train_dataset, nb_bert_train_dataset, mbert_train_dataset, nor_bert_test_dataset, nb_bert_test_dataset, mbert_test_dataset
-
-""" Tune models """
-
 
 
 def tune(model, optim, dataset):
@@ -112,6 +100,7 @@ def tune(model, optim, dataset):
             optim.step()
     model.eval()
 
+
 def f1_score(TP, FP, FN):
     """
     Calculates F1 score.
@@ -123,6 +112,7 @@ def f1_score(TP, FP, FN):
             Calculated F1 score (float)
     """
     return TP / (TP + (0.5 * (FP + FN)))
+
 
 def accuracy(TP, TN, FP, FN):
     """
@@ -136,7 +126,8 @@ def accuracy(TP, TN, FP, FN):
             Calculated accuracy (float)
     """
     return (TP + TN) / (TP + TN + FP + FN)
-    
+
+
 def eval(model, dataset):
     """
     Evaluates given model on given dataset.
@@ -170,6 +161,7 @@ def eval(model, dataset):
             else:
                 FP += 1
     return f1_score(TP, FP, FN), accuracy(TP, TN, FP, FN)
+
 
 def run():
     nb_bert_pipe = Models.get_nb_bert(2, model_type=BertForSequenceClassification)
