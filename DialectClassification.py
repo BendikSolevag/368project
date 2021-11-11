@@ -1,13 +1,10 @@
 import json
-
-import numpy as np
-import torch
 import Models
-from transformers import BertForSequenceClassification
-from transformers import AutoTokenizer
+import numpy as np
+from transformers import AdamW, AutoTokenizer, BertForSequenceClassification
 from sklearn.metrics import f1_score, accuracy_score
+import torch
 from torch.utils.data import DataLoader
-from transformers import AdamW
 from tqdm import tqdm
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
