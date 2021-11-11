@@ -21,3 +21,16 @@ This repository aims to benchmark state of the art models for norwegian language
 | Dependency parsing                | ./TokenClassification.py               | ./Data/pos_tagging/no_bokmaal-ud-train.conllu<br>./Data/pos_tagging/no_bokmaal-ud-test.conllu<br>./Data/pos_tagging/no_nynorsk-ud-train.conllu<br>./Data/pos_tagging/no_nynorsk-ud-test.conllu |
 | Part-of-speech tagging            | ./TokenClassification.py               | ./Data/pos_tagging/no_bokmaal-ud-train.conllu<br>./Data/pos_tagging/no_bokmaal-ud-test.conllu<br>./Data/pos_tagging/no_nynorsk-ud-train.conllu<br>./Data/pos_tagging/no_nynorsk-ud-test.conllu |
 | Named entity recognition          | ./TokenClassification.py               | ./Data/pos_tagging/no_bokmaal-ud-train.conllu<br>./Data/pos_tagging/no_bokmaal-ud-test.conllu<br>./Data/pos_tagging/no_nynorsk-ud-train.conllu<br>./Data/pos_tagging/no_nynorsk-ud-test.conllu |
+
+
+## Resources
+
+The models we are benchmarking are each described in their own paper. 
+
+- A description of NbBERT can be found <a href="https://arxiv.org/pdf/2104.09617.pdf">here</a>
+- A description of NorBERT can be found <a href="https://aclanthology.org/2021.nodalida-main.4.pdf">here</a>
+
+We found that Huggingface had a well developed knowledge base, and found (this article)[https://huggingface.co/transformers/training] on fine tuning a pretrained model particularly helpful.
+
+
+
