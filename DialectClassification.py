@@ -5,7 +5,7 @@ import torch
 import Models
 from transformers import BertForSequenceClassification
 from transformers import AutoTokenizer
-from seqeval.metrics import f1_score, accuracy_score
+from sklearn.metrics import f1_score, accuracy_score
 
 
 """ Fetch data """
@@ -23,17 +23,17 @@ def tag_to_index(x):
 
 
 with open('Data/dialect_classification/dialect_tweet_train.json', 'r', encoding="utf-8") as data:
-    polarity_array = json.load(data)[:20]
+    polarity_array = json.load(data)
     train_texts = [datapoint['text'] for datapoint in polarity_array]
     train_labels = [tag_to_index(datapoint['category']) for datapoint in polarity_array]
 
 with open('Data/dialect_classification/dialect_tweet_dev.json', 'r', encoding="utf-8") as data:
-    polarity_array = json.load(data)[:20]
+    polarity_array = json.load(data)
     val_texts = [datapoint['text'] for datapoint in polarity_array]
     val_labels = [tag_to_index(datapoint['category']) for datapoint in polarity_array]
 
 with open('Data/dialect_classification/dialect_tweet_test.json', 'r', encoding="utf-8") as data:
-    polarity_array = json.load(data)[:20]
+    polarity_array = json.load(data)
     test_texts = [datapoint['text'] for datapoint in polarity_array]
     test_labels = [tag_to_index(datapoint['category']) for datapoint in polarity_array]
 
@@ -91,9 +91,9 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 
 
 def tune(model, optim, dataset):
-    loader = DataLoader(dataset, batch_size=4, shuffle=True)
+    loader = DataLoader(dataset, batch_size=16, shuffle=True)
     model.train()
-    for epoch in range(2):
+    for epoch in range(32):
         for batch in tqdm(loader):
             optim.zero_grad()
             input_ids = batch['input_ids'].to(device)
@@ -113,7 +113,6 @@ def eval(model, dataset):
     loader = DataLoader(dataset, batch_size=8, shuffle=True)
     model.eval()
     eval_loss, eval_accuracy = 0, 0
-    nb_eval_steps, nb_eval_examples = 0, 0
     predictions, true_labels = [], []
     testing_loss_values = []
     for batch in tqdm(loader):
@@ -131,22 +130,17 @@ def eval(model, dataset):
         eval_loss += outputs[0].mean().item()
 
         
-        #print(label_ids)
-        #print(logits)
-        #print(np.argmax(logits, axis=1))
+
         predictions.extend(np.argmax(logits, axis=1))
         true_labels.extend(label_ids)
 
     print(eval_loss)
-    print(loader)
     eval_loss = eval_loss / len(loader)
     testing_loss_values.append(eval_loss)
     print(f"Model scores")
     print("testing loss: {}".format(eval_loss))
     pred_tags = []
     test_tags = []
-    print(predictions)
-    print(true_labels)
     for p, l in zip(predictions, true_labels):
         curr_p = []
         curr_l = []
@@ -156,26 +150,37 @@ def eval(model, dataset):
         test_tags.append(curr_l)
 
     print("testing Accuracy: {}".format(accuracy_score(pred_tags, test_tags)))
-    print("testing F1-Score: {}".format(f1_score(pred_tags, test_tags)))
-    return f1_score(pred_tags, test_tags), accuracy_score(pred_tags, test_tags)
+    print("testing F1-Score: {}".format(f1_score(pred_tags, test_tags, average='macro')))
+    return f1_score(pred_tags, test_tags, average='macro'), accuracy_score(pred_tags, test_tags)
 
 
+def get_optimizer_grouped_param(model):
+    param_optimizer = list(model.named_parameters())
+    no_decay = ['bias', 'gamma', 'beta']
+    optimizer_grouped_parameters = [
+        {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)],
+         'weight_decay_rate': 0.01},
+        {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)],
+         'weight_decay_rate': 0.0}
+    ]
+    return optimizer_grouped_parameters
 
 nor_bert_model = nor_bert_pipe.model
 nor_bert_model.to(device)
-nor_bert_optim = AdamW(nor_bert_model.parameters(), lr=5e-5)
+nor_bert_optim = AdamW(get_optimizer_grouped_param(nor_bert_model), lr=5e-5)
 tune(nor_bert_model, nor_bert_optim, nor_bert_train_dataset)
 nor_bert_f1, nor_bert_accuracy = eval(nor_bert_model, nor_bert_test_dataset)
 
 nb_bert_model = nb_bert_pipe.model
 nb_bert_model.to(device)
-nb_bert_optim = AdamW(nb_bert_model.parameters(), lr=5e-5)
+
+nb_bert_optim = AdamW(get_optimizer_grouped_param(nb_bert_model), lr=1e-5)
 tune(nb_bert_model, nb_bert_optim, nb_bert_train_dataset)
 nb_bert_f1, nb_bert_accuracy = eval(nb_bert_model, nb_bert_test_dataset)
 
 mbert_model = mbert_pipe.model
 mbert_model.to(device)
-mbert_optim = AdamW(mbert_model.parameters(), lr=5e-5)
+mbert_optim = AdamW(get_optimizer_grouped_param(mbert_model), lr=5e-5)
 tune(mbert_model, mbert_optim, mbert_train_dataset)
 mbert_f1, mbert_accuracy = eval(mbert_model, mbert_test_dataset)
 
