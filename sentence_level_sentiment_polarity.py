@@ -1,6 +1,6 @@
 """ Fetch Models """
 import torch
-from ..Models import Models
+import Models
 from transformers import BertForSequenceClassification
 
 
@@ -117,6 +117,8 @@ def eval(model, dataset):
         attention_mask = batch['attention_mask'].to(device)
         labels = batch['labels'].to(device)
         outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
+        print(outputs)
+        print(outputs[0]['label'])
         if(outputs['logits'][0][0] > outputs['logits'][0][1]):
             # False prediction
             if labels[0] == 1:
