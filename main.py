@@ -12,10 +12,6 @@ if __name__ == "__main__":
     
     if answers['benchmark'] == 'Sentence-level sentiment polarity':
         exec(open('./sentence_level_sentiment_polarity.py').read())
-    
-    if answers['benchmark'] == 'Word-level sentiment polarity':
-        print('configured yet')
-        pass
 
     if answers['benchmark'] == 'Named entity recognition':
         print('configured yet')
