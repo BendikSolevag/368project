@@ -157,6 +157,7 @@ def eval(model, dataset):
 
     print("testing Accuracy: {}".format(accuracy_score(pred_tags, test_tags)))
     print("testing F1-Score: {}".format(f1_score(pred_tags, test_tags)))
+    return f1_score(pred_tags, test_tags), accuracy_score(pred_tags, test_tags)
 
 
 
@@ -164,19 +165,21 @@ nor_bert_model = nor_bert_pipe.model
 nor_bert_model.to(device)
 nor_bert_optim = AdamW(nor_bert_model.parameters(), lr=5e-5)
 tune(nor_bert_model, nor_bert_optim, nor_bert_train_dataset)
-eval(nor_bert_model, nor_bert_test_dataset)
+nor_bert_f1, nor_bert_accuracy = eval(nor_bert_model, nor_bert_test_dataset)
 
-# nb_bert_model = nb_bert_pipe.model
-# nb_bert_model.to(device)
-# nb_bert_optim = AdamW(nb_bert_model.parameters(), lr=5e-5)
-# tune(nb_bert_model, nb_bert_optim, nb_bert_train_dataset)
-# nb_bert_f1, nb_bert_accuracy = eval(nb_bert_model, nb_bert_test_dataset)
-#
-# mbert_model = mbert_pipe.model
-# mbert_model.to(device)
-# mbert_optim = AdamW(mbert_model.parameters(), lr=5e-5)
-# tune(mbert_model, mbert_optim, mbert_train_dataset)
-# eval(mbert_model, mbert_test_dataset)
+nb_bert_model = nb_bert_pipe.model
+nb_bert_model.to(device)
+nb_bert_optim = AdamW(nb_bert_model.parameters(), lr=5e-5)
+tune(nb_bert_model, nb_bert_optim, nb_bert_train_dataset)
+nb_bert_f1, nb_bert_accuracy = eval(nb_bert_model, nb_bert_test_dataset)
 
-# print('NorBert - F1 score: ', nor_bert_f1, ' Accuracy: ', nor_bert_accuracy)
-# print('NbBert - F1 score: ', nb_bert_f1, ' Accuracy: ', nb_bert_accuracy)
+mbert_model = mbert_pipe.model
+mbert_model.to(device)
+mbert_optim = AdamW(mbert_model.parameters(), lr=5e-5)
+tune(mbert_model, mbert_optim, mbert_train_dataset)
+mbert_f1, mbert_accuracy = eval(mbert_model, mbert_test_dataset)
+
+with open('./results/dialect_classification.txt', 'w') as file:
+    file.write('NorBert - F1 score: ' + str(nor_bert_f1) + ' Accuracy: ' + str(nor_bert_accuracy) + '\n')
+    file.write('NbBert - F1 score: ' + str(nb_bert_f1) + ' Accuracy: ' + str(nb_bert_accuracy) + '\n')
+    file.write('mBert - F1 score: ' + str(mbert_f1) + ' Accuracy: ' + str(mbert_accuracy) + '\n')
