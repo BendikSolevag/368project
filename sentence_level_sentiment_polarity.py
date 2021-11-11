@@ -150,7 +150,7 @@ mbert_optim = AdamW(mbert_model.parameters(), lr=5e-5)
 tune(mbert_model, mbert_optim, mbert_train_dataset)
 mbert_f1, mbert_accuracy = eval(mbert_model, mbert_test_dataset)
 
-
-print('NorBert - F1 score: ', nor_bert_f1, ' Accuracy: ', nor_bert_accuracy)
-print('NbBert - F1 score: ', nb_bert_f1, ' Accuracy: ', nb_bert_accuracy)
-print('mBert - F1 score: ', mbert_f1, ' Accuracy: ', mbert_accuracy)
+with open('./results/sentence_level_sentiment_polarity.txt', 'w') as file:
+    file.write('NorBert - F1 score: ' + str(nor_bert_f1) + ' Accuracy: ' + str(nor_bert_accuracy) + '\n')
+    file.write('NbBert - F1 score: ' + str(nb_bert_f1) + ' Accuracy: ' + str(nb_bert_accuracy) + '\n')
+    file.write('mBert - F1 score: ' + str(mbert_f1) + ' Accuracy: ' + str(mbert_accuracy) + '\n')
