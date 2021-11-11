@@ -279,10 +279,12 @@ def train_and_test_model_on_ner(pipeline, name, sentences, label2idx, label_valu
             predictions.extend([list(p) for p in np.argmax(logits, axis=2)])
             true_labels.extend(label_ids)
 
+        # Calculate loss
         eval_loss = eval_loss / len(test_dataloader)
         testing_loss_values.append(eval_loss)
         print(f"Model: {name} scores")
         print("testing loss: {}".format(eval_loss))
+        # Format results for F1 score and accuracy
         pred_tags = []
         test_tags = []
         for p, l in zip(predictions, true_labels):

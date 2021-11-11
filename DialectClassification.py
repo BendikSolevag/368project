@@ -11,9 +11,6 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 tag_values = ['bokmål', 'nynorsk', 'dialekt', 'mixed']
 
 
-""" Fetch data """
-
-
 def tag_to_index(x):
     if x == 'bokmål':
         return 0
@@ -25,7 +22,10 @@ def tag_to_index(x):
         return 3
 
 
-class SentinentPolarityDataset(torch.utils.data.Dataset):
+class SentimentPolarityDataset(torch.utils.data.Dataset):
+    """
+    Simple class to wrap and extract features and labels, and work with torch dataloaders
+    """
     def __init__(self, encodings, labels):
         self.encodings = encodings
         self.labels = labels
@@ -40,7 +40,10 @@ class SentinentPolarityDataset(torch.utils.data.Dataset):
 
 
 def fetch_datasets():
-
+    """
+    Fetches the data and formats it to trainable torch tensors
+    :return: trainable torch tensors for all three models
+    """
     with open('Data/dialect_classification/dialect_tweet_train.json', 'r', encoding="utf-8") as data:
         dialect_data = json.load(data)
         train_texts = [datapoint['text'] for datapoint in dialect_data]
@@ -65,13 +68,13 @@ def fetch_datasets():
     nb_bert_test_encodings = nb_bert_tokenizer(test_texts, truncation=True, padding=True)
     mbert_test_encodings = mbert_tokenizer(test_texts, truncation=True, padding=True)
 
-    nor_bert_train_dataset = SentinentPolarityDataset(nor_bert_train_encodings, train_labels)
-    nb_bert_train_dataset = SentinentPolarityDataset(nb_bert_train_encodings, train_labels)
-    mbert_train_dataset = SentinentPolarityDataset(mbert_train_encodings, train_labels)
+    nor_bert_train_dataset = SentimentPolarityDataset(nor_bert_train_encodings, train_labels)
+    nb_bert_train_dataset = SentimentPolarityDataset(nb_bert_train_encodings, train_labels)
+    mbert_train_dataset = SentimentPolarityDataset(mbert_train_encodings, train_labels)
 
-    nor_bert_test_dataset = SentinentPolarityDataset(nor_bert_test_encodings, test_labels)
-    nb_bert_test_dataset = SentinentPolarityDataset(nb_bert_test_encodings, test_labels)
-    mbert_test_dataset = SentinentPolarityDataset(mbert_test_encodings, test_labels)
+    nor_bert_test_dataset = SentimentPolarityDataset(nor_bert_test_encodings, test_labels)
+    nb_bert_test_dataset = SentimentPolarityDataset(nb_bert_test_encodings, test_labels)
+    mbert_test_dataset = SentimentPolarityDataset(mbert_test_encodings, test_labels)
 
     return nor_bert_train_dataset, nb_bert_train_dataset, mbert_train_dataset, nor_bert_test_dataset, nb_bert_test_dataset, mbert_test_dataset
 
@@ -82,6 +85,7 @@ def tune(model, optim, dataset, testdata):
     """
     loader = DataLoader(dataset, batch_size=16, shuffle=True)
     model.train()
+    # Training loop
     for epoch in range(32):
         for batch in tqdm(loader):
             optim.zero_grad()
@@ -97,11 +101,15 @@ def tune(model, optim, dataset, testdata):
 
 
 def eval(model, dataset):
+    """
+    Evaluate the model on testing data
+    """
     loader = DataLoader(dataset, batch_size=8, shuffle=True)
     model.eval()
     eval_loss, eval_accuracy = 0, 0
     predictions, true_labels = [], []
     testing_loss_values = []
+
     for batch in tqdm(loader):
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
@@ -109,23 +117,19 @@ def eval(model, dataset):
 
         with torch.no_grad():
             outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
-        # Move logits and labels to CPU
         logits = outputs[1].detach().cpu().numpy()
         label_ids = labels.to('cpu').numpy()
-
-        # Calculate the accuracy for this batch of test sentences.
         eval_loss += outputs[0].mean().item()
-
-        
-
         predictions.extend(np.argmax(logits, axis=1))
         true_labels.extend(label_ids)
 
-    print(eval_loss)
+    # Calculate loss
+    # print(eval_loss)
     eval_loss = eval_loss / len(loader)
     testing_loss_values.append(eval_loss)
     print(f"Model scores")
     print("testing loss: {}".format(eval_loss))
+    # Format results for F1 score and accuracy
     pred_tags = []
     test_tags = []
     for p, l in zip(predictions, true_labels):
@@ -142,6 +146,9 @@ def eval(model, dataset):
 
 
 def get_optimizer_grouped_param(model):
+    # This way of setting up parameters was found at
+    # https://www.depends-on-the-definition.com/named-entity-recognition-with-bert/
+    # and gave better results.
     param_optimizer = list(model.named_parameters())
     no_decay = ['bias', 'gamma', 'beta']
     optimizer_grouped_parameters = [
@@ -154,6 +161,9 @@ def get_optimizer_grouped_param(model):
 
 
 def run():
+    """
+    Run all models, warning if on GPU requires at least 8gb vram
+    """
 
     nb_bert_pipe = Models.get_nb_bert(4, model_type=BertForSequenceClassification)
     mbert_pipe = Models.get_mbert(4, model_type=BertForSequenceClassification)
