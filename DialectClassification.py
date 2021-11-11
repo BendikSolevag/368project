@@ -22,17 +22,17 @@ def tag_to_index(x):
         return 3
 
 
-with open('Data/dialect_tweet_train.json', 'r', encoding="utf-8") as data:
+with open('Data/dialect_classification/dialect_tweet_train.json', 'r', encoding="utf-8") as data:
     polarity_array = json.load(data)[:20]
     train_texts = [datapoint['text'] for datapoint in polarity_array]
     train_labels = [tag_to_index(datapoint['category']) for datapoint in polarity_array]
 
-with open('Data/dialect_tweet_dev.json', 'r', encoding="utf-8") as data:
+with open('Data/dialect_classification/dialect_tweet_dev.json', 'r', encoding="utf-8") as data:
     polarity_array = json.load(data)[:20]
     val_texts = [datapoint['text'] for datapoint in polarity_array]
     val_labels = [tag_to_index(datapoint['category']) for datapoint in polarity_array]
 
-with open('Data/dialect_tweet_test.json', 'r', encoding="utf-8") as data:
+with open('Data/dialect_classification/dialect_tweet_test.json', 'r', encoding="utf-8") as data:
     polarity_array = json.load(data)[:20]
     test_texts = [datapoint['text'] for datapoint in polarity_array]
     test_labels = [tag_to_index(datapoint['category']) for datapoint in polarity_array]
