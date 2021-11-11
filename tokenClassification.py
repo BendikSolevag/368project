@@ -266,6 +266,3 @@ def run():
     f1_scores['norbert_nn'], acc_scores['norbert_nn'] = train_and_test_model_on_ner(Models.get_nor_bert(len(tag2idx), task='ner'), "NOR-BERT nynorsk", sentences_no, tag2idx_no, tag_values_no, test_len_no, tag=tag)
     f1_scores['nbbert_nn'], acc_scores['nbbert_nn'] = train_and_test_model_on_ner(Models.get_nb_bert(len(tag2idx), task='ner'), "NB-BERT nynorsk", sentences_no, tag2idx_no, tag_values_no, test_len_no, tag=tag)
     f1_scores['mbert_nn'],  acc_scores['mbert_nn'] = train_and_test_model_on_ner(Models.get_mbert(len(tag2idx), task='ner'), "mBert nynorsk", sentences_no, tag2idx_no, tag_values_no, test_len_no, tag=tag)
-
-
-run()
