@@ -23,17 +23,17 @@ def tag_to_index(x):
 
 
 with open('Data/dialect_tweet_train.json', 'r', encoding="utf-8") as data:
-    polarity_array = json.load(data)
+    polarity_array = json.load(data)[:20]
     train_texts = [datapoint['text'] for datapoint in polarity_array]
     train_labels = [tag_to_index(datapoint['category']) for datapoint in polarity_array]
 
 with open('Data/dialect_tweet_dev.json', 'r', encoding="utf-8") as data:
-    polarity_array = json.load(data)
+    polarity_array = json.load(data)[:20]
     val_texts = [datapoint['text'] for datapoint in polarity_array]
     val_labels = [tag_to_index(datapoint['category']) for datapoint in polarity_array]
 
 with open('Data/dialect_tweet_test.json', 'r', encoding="utf-8") as data:
-    polarity_array = json.load(data)
+    polarity_array = json.load(data)[:20]
     test_texts = [datapoint['text'] for datapoint in polarity_array]
     test_labels = [tag_to_index(datapoint['category']) for datapoint in polarity_array]
 
@@ -120,6 +120,7 @@ def eval(model, dataset):
         input_ids = batch['input_ids'].to(device)
         attention_mask = batch['attention_mask'].to(device)
         labels = batch['labels'].to(device)
+
         with torch.no_grad():
             outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
         # Move logits and labels to CPU
@@ -129,9 +130,11 @@ def eval(model, dataset):
         # Calculate the accuracy for this batch of test sentences.
         eval_loss += outputs[0].mean().item()
 
-        print(np.argmax(logits, axis=2))
-        print(logits.shape)
-        predictions.extend([[p] for p in [1,2,3]])
+        
+        #print(label_ids)
+        #print(logits)
+        #print(np.argmax(logits, axis=1))
+        predictions.extend(np.argmax(logits, axis=1))
         true_labels.extend(label_ids)
 
     print(eval_loss)
@@ -142,12 +145,13 @@ def eval(model, dataset):
     print("testing loss: {}".format(eval_loss))
     pred_tags = []
     test_tags = []
+    print(predictions)
+    print(true_labels)
     for p, l in zip(predictions, true_labels):
         curr_p = []
         curr_l = []
-        for p_i, l_i in zip(p, l):
-            curr_p.append(tag_values[p_i])
-            curr_l.append(tag_values[l_i])
+        curr_p.append(tag_values[p])
+        curr_l.append(tag_values[l])
         pred_tags.append(curr_p)
         test_tags.append(curr_l)
 
@@ -176,4 +180,3 @@ eval(nor_bert_model, nor_bert_test_dataset)
 
 # print('NorBert - F1 score: ', nor_bert_f1, ' Accuracy: ', nor_bert_accuracy)
 # print('NbBert - F1 score: ', nb_bert_f1, ' Accuracy: ', nb_bert_accuracy)
-
