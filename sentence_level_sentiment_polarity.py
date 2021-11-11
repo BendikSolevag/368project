@@ -17,17 +17,17 @@ def number_sentiment(sentiment):
         return 1
     return 0
 
-with open('./sentence_level_sentiment_polarity/train.json') as polarity_data:
+with open('./Data/sentence_level_sentiment_polarity/train.json') as polarity_data:
     polarity_array = json.load(polarity_data)[:5]
     train_texts = [datapoint['text'] for datapoint in polarity_array]
     train_labels = [number_sentiment(datapoint['label']) for datapoint in polarity_array]
     
-with open('./sentence_level_sentiment_polarity/val.json') as polarity_data:
+with open('./Data/sentence_level_sentiment_polarity/val.json') as polarity_data:
     polarity_array = json.load(polarity_data)[:5]
     val_texts = [datapoint['text'] for datapoint in polarity_array]
     val_labels = [number_sentiment(datapoint['label']) for datapoint in polarity_array]
     
-with open('./sentence_level_sentiment_polarity/test.json') as polarity_data:
+with open('./Data/sentence_level_sentiment_polarity/test.json') as polarity_data:
     polarity_array = json.load(polarity_data)[:5]
     test_texts = [datapoint['text'] for datapoint in polarity_array]
     test_labels = [number_sentiment(datapoint['label']) for datapoint in polarity_array]
