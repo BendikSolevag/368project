@@ -1,5 +1,7 @@
 # Benchmarking NorBert, NbBert and mBert 🤖⚔️
 
+A collaborative project by Bendik Solevåg and Erik Hystad
+
 ## Requirements
 
 This project requires ```python v3.8``` and ```pip v21.3.1``` <br />
