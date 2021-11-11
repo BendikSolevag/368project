@@ -11,8 +11,6 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 tag_values = ['bokmål', 'nynorsk', 'dialekt', 'mixed']
 
 
-""" Fetch data """
-
 
 def tag_to_index(x):
     if x == 'bokmål':
@@ -38,8 +36,12 @@ class SentinentPolarityDataset(torch.utils.data.Dataset):
         return len(self.labels)
 
 
-
 def fetch_datasets():
+    """
+    Fetches data from the /Data directory. Parses labels, tokenizes inputs. Loads data into a custom pytorch Dataset 
+        Returns:
+            Six SentinentPolarityDataset datasets.
+    """
 
     with open('Data/dialect_classification/dialect_tweet_train.json', 'r', encoding="utf-8") as data:
         polarity_array = json.load(data)
@@ -85,10 +87,15 @@ def fetch_datasets():
 
     return nor_bert_train_dataset, nb_bert_train_dataset, mbert_train_dataset, nor_bert_test_dataset, nb_bert_test_dataset, mbert_test_dataset
 
-""" Tune models """
-
 
 def tune(model, optim, dataset):
+    """
+    Trains a given model on the given dataset using the given optimizer. 
+        Parameters:
+            model (pytorch model): The model we want to train.
+            optim (pytoch optimizer): The optimizer we wish to use.
+            dataset (pytorch dataset): The dataset we wish to tune our model to.
+    """
     loader = DataLoader(dataset, batch_size=16, shuffle=True)
     model.train()
     for epoch in range(32):
@@ -104,9 +111,15 @@ def tune(model, optim, dataset):
     model.eval()
 
 
-
-
 def eval(model, dataset):
+    """
+    Evaluates given model on given dataset.
+        Params:
+            model (pytorch model): The model we wish to evaluate.
+            dataset (pytorch dataset): The dataset used to evaluate the model.
+        Returns:
+            F1 score and accuracy of the given model on the given dataset.
+    """
     loader = DataLoader(dataset, batch_size=8, shuffle=True)
     model.eval()
     eval_loss, eval_accuracy = 0, 0
