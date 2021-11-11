@@ -11,7 +11,6 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 tag_values = ['bokmål', 'nynorsk', 'dialekt', 'mixed']
 
 
-
 def tag_to_index(x):
     if x == 'bokmål':
         return 0
@@ -134,13 +133,10 @@ def eval(model, dataset):
         # Calculate the accuracy for this batch of test sentences.
         eval_loss += outputs[0].mean().item()
 
-
-
         predictions.extend(np.argmax(logits, axis=1))
         true_labels.extend(label_ids)
 
     # Calculate loss
-    # print(eval_loss)
     eval_loss = eval_loss / len(loader)
     testing_loss_values.append(eval_loss)
     print(f"Model scores")
