@@ -10,6 +10,14 @@ device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 
 
 def number_sentiment(sentiment):
+    """
+    Returns a number representation of the input.
+        Parameters:
+            sentiment (string): One of 'Positive' or 'Negative'
+
+        Returns:
+            1 if sentiment == 'Positive', 0 otherwise.
+    """
     if sentiment == 'Positive':
         return 1
     return 0
@@ -28,6 +36,11 @@ class SentinentPolarityDataset(torch.utils.data.Dataset):
         return len(self.labels)
 
 def fetch_datasets():
+    """
+    Fetches data from the /Data directory. Parses labels, tokenizes inputs. Loads data into a custom pytorch Dataset 
+        Returns:
+            Six SentinentPolarityDataset datasets.
+    """
 
     with open('./Data/sentence_level_sentiment_polarity/train.json') as polarity_data:
         polarity_array = json.load(polarity_data)[:5]
@@ -78,6 +91,13 @@ def fetch_datasets():
 
 
 def tune(model, optim, dataset):
+    """
+    Trains a given model on the given dataset using the given optimizer. 
+        Parameters:
+            model (pytorch model): The model we want to train.
+            optim (pytoch optimizer): The optimizer we wish to use.
+            dataset (pytorch dataset): The dataset we wish to tune our model to.
+    """
     loader = DataLoader(dataset, batch_size=4, shuffle=True)
     model.train()
     for epoch in range(3):
@@ -93,12 +113,39 @@ def tune(model, optim, dataset):
     model.eval()
 
 def f1_score(TP, FP, FN):
+    """
+    Calculates F1 score.
+        Parameters:
+            TP (int): Amount of true positives
+            FP (int): Amount of false positives
+            FN (int): Amount of false negatives
+        Returns:
+            Calculated F1 score (float)
+    """
     return TP / (TP + (0.5 * (FP + FN)))
 
 def accuracy(TP, TN, FP, FN):
+    """
+    Calculates accuracy
+        Parameters:
+            TP (int): True positives
+            TN (int): True negatives
+            FP (int): False positives
+            FN (int): False negatives
+        Returns:
+            Calculated accuracy (float)
+    """
     return (TP + TN) / (TP + TN + FP + FN)
     
 def eval(model, dataset):
+    """
+    Evaluates given model on given dataset.
+        Params:
+            model (pytorch model): The model we wish to evaluate.
+            dataset (pytorch dataset): The dataset used to evaluate the model.
+        Returns:
+            F1 score and accuracy of the given model on the given dataset.
+    """
     loader = DataLoader(dataset, batch_size=1, shuffle=True)
     model.eval()
     TP = 0
