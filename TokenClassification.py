@@ -33,14 +33,14 @@ def get_data():
     with open("Data/pos_tagging/no_nynorsk-ud-test.conllu.txt", 'r', encoding="utf-8") as file:
         no_test = file.read()
 
-    sentences = parse(nb_test)[:10]
+    sentences = parse(nb_test)
     test_len_nb = len(sentences)
-    sentences_train = parse(nb_train)[:10]
+    sentences_train = parse(nb_train)
     sentences.extend(sentences_train)
 
-    sentences_no = parse(no_test)[:10]
+    sentences_no = parse(no_test)
     test_len_no = len(sentences_no)
-    sentences_no_train = parse(no_train)[:10]
+    sentences_no_train = parse(no_train)
     sentences_no.extend(sentences_no_train)
     return sentences, test_len_nb, sentences_no, test_len_no
 
@@ -253,8 +253,8 @@ def run():
 
     sentences, test_len, sentences_no, test_len_no = get_data()
 
-    sentences = FormatData(sentences)
-    sentences_no = FormatData(sentences_no)
+    sentences = FormatData(sentences, tag_col=tag_col)
+    sentences_no = FormatData(sentences_no, tag_col=tag_col)
     tag2idx, tag_values = get_tag2idx(get_tag(sentences, tag=tag))
     tag2idx_no, tag_values_no = get_tag2idx(get_tag(sentences_no, tag=tag))
     f1_scores, acc_scores = {}, {}
@@ -266,6 +266,10 @@ def run():
     f1_scores['norbert_nn'], acc_scores['norbert_nn'] = train_and_test_model_on_ner(Models.get_nor_bert(len(tag2idx), task='ner'), "NOR-BERT nynorsk", sentences_no, tag2idx_no, tag_values_no, test_len_no, tag=tag)
     f1_scores['nbbert_nn'], acc_scores['nbbert_nn'] = train_and_test_model_on_ner(Models.get_nb_bert(len(tag2idx), task='ner'), "NB-BERT nynorsk", sentences_no, tag2idx_no, tag_values_no, test_len_no, tag=tag)
     f1_scores['mbert_nn'],  acc_scores['mbert_nn'] = train_and_test_model_on_ner(Models.get_mbert(len(tag2idx), task='ner'), "mBert nynorsk", sentences_no, tag2idx_no, tag_values_no, test_len_no, tag=tag)
+
+    for name in f1_scores:
+        with open("results/token_classification" + name, 'w') as file:
+            file.write("F1 score:" + str(f1_scores[name] + " accuracy: " + str(acc_scores[name])))
 
 
 run()
