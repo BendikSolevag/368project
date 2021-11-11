@@ -1,3 +1,0 @@
-NorBert - F1 score: 1.0 Accuracy: 1.0
-NbBert - F1 score: 1.0 Accuracy: 1.0
-mBert - F1 score: 1.0 Accuracy: 1.0
