@@ -1,14 +1,10 @@
 import json
-
 import numpy as np
 import torch
 import Models
 from transformers import BertForSequenceClassification
 from transformers import AutoTokenizer
 from sklearn.metrics import f1_score, accuracy_score
-
-
-""" Fetch data """
 
 
 def tag_to_index(x):
