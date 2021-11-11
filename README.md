@@ -1,4 +1,4 @@
-# Benchmarking NorBert, NbBert and mBert
+# Benchmarking NorBert, NbBert and mBert 🤖⚔️
 
 ## Requirements
 
