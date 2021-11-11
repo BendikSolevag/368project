@@ -154,5 +154,3 @@ def run():
         file.write('NorBert - F1 score: ' + str(nor_bert_f1) + ' Accuracy: ' + str(nor_bert_accuracy) + '\n')
         file.write('NbBert - F1 score: ' + str(nb_bert_f1) + ' Accuracy: ' + str(nb_bert_accuracy) + '\n')
         file.write('mBert - F1 score: ' + str(mbert_f1) + ' Accuracy: ' + str(mbert_accuracy) + '\n')
-
-run()
