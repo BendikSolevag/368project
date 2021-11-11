@@ -7,7 +7,8 @@ To install the neccesary dependencies, run the ```setup.py```
 
 ## Usage
 
-To run the project, run ```python3 main.py``` in the project root.
+To run the project, run ```python3 main.py``` in the project root.<br />
+Evaluation results can be found in the ./results/ directory after running the benchmark in question.
 
 ## Description
 
