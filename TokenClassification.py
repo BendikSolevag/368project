@@ -140,10 +140,13 @@ def data_helper_tokenize_and_format(tokenizer, sentences, label2idx, tag=False):
     """
     MAX_LEN = 75
 
+    # Use huggingface transformer to tokenize words
     tokenized_bert_text_and_labels = [tokenize_and_preserve_labels(sentence, tokenizer, tag=tag)
                                       for sentence in sentences]
 
+    # Extract text
     bert_tokenized_text = [t for t, l in tokenized_bert_text_and_labels]
+    # Extract labels
     bert_labels = [l for t, l in tokenized_bert_text_and_labels]
 
     input_ids = pad_sequences([tokenizer.convert_tokens_to_ids(txt) for txt in bert_tokenized_text],
@@ -201,6 +204,9 @@ def train_and_test_model_on_ner(pipeline, name, sentences, label2idx, label_valu
     input_ids, tags, attention_masks = data_helper_tokenize_and_format(pipeline.tokenizer, sentences, label2idx, tag=tag)
     train_dataloader, test_dataloader = data_helper_torch_datasets(input_ids, tags, attention_masks, test_len)
 
+    # This way of setting up parameters was found at
+    # https://www.depends-on-the-definition.com/named-entity-recognition-with-bert/
+    # and gave better results.
     param_optimizer = list(model.named_parameters())
     no_decay = ['bias', 'gamma', 'beta']
     optimizer_grouped_parameters = [
@@ -227,15 +233,19 @@ def train_and_test_model_on_ner(pipeline, name, sentences, label2idx, label_valu
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
     f1, acc = 0, 0
+
+    # Training and eval loop
     for _ in trange(epochs, desc="Epoch"):
 
         model.train()
         total_loss = 0
 
         for step, batch in enumerate(train_dataloader):
+            # Send data to gpu
             batch = tuple(t.to(device) for t in batch)
             b_input_ids, b_input_mask, b_labels = batch
             model.zero_grad()
+
             outputs = model(b_input_ids, token_type_ids=None,
                             attention_mask=b_input_mask, labels=b_labels)
 
@@ -253,7 +263,7 @@ def train_and_test_model_on_ner(pipeline, name, sentences, label2idx, label_valu
         loss_values.append(avg_train_loss)
 
         model.eval()
-
+        # Evaluate model
         eval_loss, eval_accuracy = 0, 0
         predictions, true_labels = [], []
         for batch in test_dataloader:
@@ -320,6 +330,7 @@ def run():
             break
         print("Pleas press either [n], [p] or [d].")
 
+    # Get and format data
     sentences, test_len, sentences_no, test_len_no = get_data()
 
     sentences = FormatData(sentences, tag_col=tag_col)
@@ -327,15 +338,21 @@ def run():
     label2idx, label_values = get_label2idx(get_labels(sentences, tag=tag))
     label2idx_no, label_values_no = get_label2idx(get_labels(sentences_no, tag=tag))
     f1_scores, acc_scores = {}, {}
+
+    # Train and evaluate all three models on bokmål data
     print("Starting training and testing on bokmål")
     f1_scores['norbert_bm'], acc_scores['norbert_bm'] = train_and_test_model_on_ner(Models.get_nor_bert(len(label2idx), task='ner'), "NOR-BERT bokmål", sentences, label2idx, label_values, test_len, tag=tag)
     f1_scores['nbbert_bm'], acc_scores['nbbert_bm'] = train_and_test_model_on_ner(Models.get_nb_bert(len(label2idx), task='ner'), "NB-BERT bokmål", sentences, label2idx, label_values, test_len, tag=tag)
     f1_scores['mbert_bm'], acc_scores['mbert_bm'] = train_and_test_model_on_ner(Models.get_mbert(len(label2idx), task='ner'), "mBert bokmål", sentences, label2idx, label_values, test_len, tag=tag)
+
+    # Repeat on nynorsk
     print("\nTraining and testing on nynorsk")
     f1_scores['norbert_nn'], acc_scores['norbert_nn'] = train_and_test_model_on_ner(Models.get_nor_bert(len(label2idx_no), task='ner'), "NOR-BERT nynorsk", sentences_no, label2idx_no, label_values_no, test_len_no, tag=tag)
     f1_scores['nbbert_nn'], acc_scores['nbbert_nn'] = train_and_test_model_on_ner(Models.get_nb_bert(len(label2idx_no), task='ner'), "NB-BERT nynorsk", sentences_no, label2idx_no, label_values_no, test_len_no, tag=tag)
     f1_scores['mbert_nn'],  acc_scores['mbert_nn'] = train_and_test_model_on_ner(Models.get_mbert(len(label2idx_no), task='ner'), "mBert nynorsk", sentences_no, label2idx_no, label_values_no, test_len_no, tag=tag)
+
     if tag:
+        # If it is dependency parsing or part of speech tagging then we will also evaluate the dialects dataset
         print("\nTraining and testing on dialect")
         sentences, test_len = get_dialect_data()
         sentences = DialectData(sentences, tag_col=tag_col)

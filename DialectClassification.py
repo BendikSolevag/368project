@@ -22,6 +22,7 @@ def tag_to_index(x):
     else:
         return 3
 
+
 class SentinentPolarityDataset(torch.utils.data.Dataset):
     def __init__(self, encodings, labels):
         self.encodings = encodings
@@ -38,25 +39,20 @@ class SentinentPolarityDataset(torch.utils.data.Dataset):
 
 def fetch_datasets():
     """
-    Fetches data from the /Data directory. Parses labels, tokenizes inputs. Loads data into a custom pytorch Dataset 
+    Fetches data from the /Data directory. Parses labels, tokenizes inputs. Loads data into a custom pytorch Dataset
         Returns:
             Six SentinentPolarityDataset datasets.
     """
 
     with open('Data/dialect_classification/dialect_tweet_train.json', 'r', encoding="utf-8") as data:
-        polarity_array = json.load(data)
-        train_texts = [datapoint['text'] for datapoint in polarity_array]
-        train_labels = [tag_to_index(datapoint['category']) for datapoint in polarity_array]
-
-    with open('Data/dialect_classification/dialect_tweet_dev.json', 'r', encoding="utf-8") as data:
-        polarity_array = json.load(data)
-        val_texts = [datapoint['text'] for datapoint in polarity_array]
-        val_labels = [tag_to_index(datapoint['category']) for datapoint in polarity_array]
+        dialect_data = json.load(data)
+        train_texts = [datapoint['text'] for datapoint in dialect_data]
+        train_labels = [tag_to_index(datapoint['category']) for datapoint in dialect_data]
 
     with open('Data/dialect_classification/dialect_tweet_test.json', 'r', encoding="utf-8") as data:
-        polarity_array = json.load(data)
-        test_texts = [datapoint['text'] for datapoint in polarity_array]
-        test_labels = [tag_to_index(datapoint['category']) for datapoint in polarity_array]
+        dialect_data = json.load(data)
+        test_texts = [datapoint['text'] for datapoint in dialect_data]
+        test_labels = [tag_to_index(datapoint['category']) for datapoint in dialect_data]
 
     """ Parse data into datasets """
 
@@ -68,14 +64,9 @@ def fetch_datasets():
     nb_bert_train_encodings = nb_bert_tokenizer(train_texts, truncation=True, padding=True)
     mbert_train_encodings = mbert_tokenizer(train_texts, truncation=True, padding=True)
 
-    nor_bert_val_encodings = nor_bert_tokenizer(val_texts, truncation=True, padding=True)
-    nb_bert_val_encodings = nb_bert_tokenizer(val_texts, truncation=True, padding=True)
-    mbert_val_encodings = mbert_tokenizer(val_texts, truncation=True, padding=True)
-
     nor_bert_test_encodings = nor_bert_tokenizer(test_texts, truncation=True, padding=True)
     nb_bert_test_encodings = nb_bert_tokenizer(test_texts, truncation=True, padding=True)
     mbert_test_encodings = mbert_tokenizer(test_texts, truncation=True, padding=True)
-
 
     nor_bert_train_dataset = SentinentPolarityDataset(nor_bert_train_encodings, train_labels)
     nb_bert_train_dataset = SentinentPolarityDataset(nb_bert_train_encodings, train_labels)
@@ -90,7 +81,7 @@ def fetch_datasets():
 
 def tune(model, optim, dataset):
     """
-    Trains a given model on the given dataset using the given optimizer. 
+    Trains a given model on the given dataset using the given optimizer.
         Parameters:
             model (pytorch model): The model we want to train.
             optim (pytoch optimizer): The optimizer we wish to use.
@@ -108,6 +99,7 @@ def tune(model, optim, dataset):
             loss = outputs[0]
             loss.backward()
             optim.step()
+        eval(model, testdata)
     model.eval()
 
 
@@ -139,7 +131,7 @@ def eval(model, dataset):
         # Calculate the accuracy for this batch of test sentences.
         eval_loss += outputs[0].mean().item()
 
-        
+
 
         predictions.extend(np.argmax(logits, axis=1))
         true_labels.extend(label_ids)
@@ -175,6 +167,7 @@ def get_optimizer_grouped_param(model):
     ]
     return optimizer_grouped_parameters
 
+
 def run():
 
     nb_bert_pipe = Models.get_nb_bert(4, model_type=BertForSequenceClassification)
@@ -186,20 +179,20 @@ def run():
     nor_bert_model = nor_bert_pipe.model
     nor_bert_model.to(device)
     nor_bert_optim = AdamW(get_optimizer_grouped_param(nor_bert_model), lr=5e-5)
-    tune(nor_bert_model, nor_bert_optim, nor_bert_train_dataset)
+    tune(nor_bert_model, nor_bert_optim, nor_bert_train_dataset, nor_bert_test_dataset)
     nor_bert_f1, nor_bert_accuracy = eval(nor_bert_model, nor_bert_test_dataset)
 
     nb_bert_model = nb_bert_pipe.model
     nb_bert_model.to(device)
 
     nb_bert_optim = AdamW(get_optimizer_grouped_param(nb_bert_model), lr=1e-5)
-    tune(nb_bert_model, nb_bert_optim, nb_bert_train_dataset)
+    tune(nb_bert_model, nb_bert_optim, nb_bert_train_dataset, nb_bert_test_dataset)
     nb_bert_f1, nb_bert_accuracy = eval(nb_bert_model, nb_bert_test_dataset)
 
     mbert_model = mbert_pipe.model
     mbert_model.to(device)
     mbert_optim = AdamW(get_optimizer_grouped_param(mbert_model), lr=5e-5)
-    tune(mbert_model, mbert_optim, mbert_train_dataset)
+    tune(mbert_model, mbert_optim, mbert_train_dataset, mbert_test_dataset)
     mbert_f1, mbert_accuracy = eval(mbert_model, mbert_test_dataset)
 
     with open('./results/dialect_classification.txt', 'w') as file:
