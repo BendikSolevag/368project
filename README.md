@@ -30,7 +30,7 @@ The models we are benchmarking are each described in their own paper.
 - A description of NbBERT can be found <a href="https://arxiv.org/pdf/2104.09617.pdf">here</a>
 - A description of NorBERT can be found <a href="https://aclanthology.org/2021.nodalida-main.4.pdf">here</a>
 
-We found that Huggingface had a well developed knowledge base, and found <a href="https://huggingface.co/transformers/training">this article</a> on fine tuning a pretrained model particularly helpful.
+We found that Huggingface had a well developed knowledge base, and found <a href="https://huggingface.co/transformers/training">this article</a> on fine tuning a pretrained model particularly helpful. <a href="https://www.depends-on-the-definition.com/named-entity-recognition-with-bert/">This article</a> on training for named entity recognition we also relied heavily upon.
 
 
 
