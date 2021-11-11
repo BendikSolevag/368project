@@ -82,7 +82,7 @@ def fetch_datasets():
     return nor_bert_train_dataset, nb_bert_train_dataset, mbert_train_dataset, nor_bert_test_dataset, nb_bert_test_dataset, mbert_test_dataset
 
 
-def tune(model, optim, dataset):
+def tune(model, optim, dataset, testdata):
     """
     Trains a given model on the given dataset using the given optimizer.
         Parameters:
