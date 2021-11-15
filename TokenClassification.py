@@ -9,6 +9,8 @@ from seqeval.metrics import f1_score, accuracy_score
 from tqdm import trange
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 
+torch.manual_seed(27)
+
 
 class FormatData(torch.utils.data.Dataset):
     """
@@ -177,15 +179,15 @@ def data_helper_torch_datasets(input_ids, tags, attention_masks, test_len):
 
     train_data = TensorDataset(train_inputs, train_masks, train_tags)
     train_sampler = RandomSampler(train_data)
-    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=8)
+    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=16)
 
     test_data = TensorDataset(test_inputs, test_masks, test_tags)
     test_sampler = SequentialSampler(test_data)
-    test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=8)
+    test_dataloader = DataLoader(test_data, sampler=test_sampler, batch_size=16)
     return train_dataloader, test_dataloader
 
 
-def train_and_test_model_on_ner(pipeline, name, sentences, label2idx, label_values, test_len, epochs=3, tag=False):
+def train_and_test_model_on_ner(pipeline, name, sentences, label2idx, label_values, test_len, epochs=25, tag=False):
     """
     Sets up a model and trains and evaluates it
     :param pipeline: transformers pipeline
@@ -308,14 +310,12 @@ def console_in():
     return input("Do you wish do do [N]amed entity recognition, [P]art of speech tagging or [D]ependency parsing?")
 
 
-def run():
+def run(ans):
 
     question = True
     tag = False
     tag_col = 'upos'
-    ans = ''
     while question:
-        ans = console_in()
         if ans.lower() == 'n':
             tag = False
             question = False
@@ -369,5 +369,5 @@ def run():
             Models.get_mbert(len(label2idx), task='ner'), "mBert bokmål", sentences, label2idx, label_values, test_len,
             tag=tag)
     for name in f1_scores:
-        with open("results/token_classification" + name + "_" + ans, 'w') as file:
-            file.write("F1 score:" + str(f1_scores[name] + " accuracy: " + str(acc_scores[name])))
+        with open("results/token_classification_" + name + "_" + ans + '.txt', 'w') as file:
+            file.write(f"Name: {name} {ans} \nF1 score:" + str(str(f1_scores[name]) + " accuracy: " + str(str(acc_scores[name]))))

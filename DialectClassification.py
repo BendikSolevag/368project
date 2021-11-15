@@ -9,6 +9,7 @@ from tqdm import tqdm
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 tag_values = ['bokmål', 'nynorsk', 'dialekt', 'mixed']
+torch.manual_seed(27)
 
 
 def tag_to_index(x):
@@ -89,18 +90,24 @@ def tune(model, optim, dataset, testdata):
             optim (pytoch optimizer): The optimizer we wish to use.
             dataset (pytorch dataset): The dataset we wish to tune our model to.
     """
+
     loader = DataLoader(dataset, batch_size=16, shuffle=True)
     model.train()
-    for epoch in range(32):
+    i = 0
+    avg_loss = 0
+    for epoch in range(15):
         for batch in tqdm(loader):
+            i += 1
             optim.zero_grad()
             input_ids = batch['input_ids'].to(device)
             attention_mask = batch['attention_mask'].to(device)
             labels = batch['labels'].to(device)
             outputs = model(input_ids, attention_mask=attention_mask, labels=labels)
             loss = outputs[0]
+            avg_loss += loss.item()
             loss.backward()
             optim.step()
+        print("Training loss:", avg_loss/i)
         eval(model, testdata)
     model.eval()
 
@@ -185,9 +192,10 @@ def run():
 
     nor_bert_model = nor_bert_pipe.model
     nor_bert_model.to(device)
-    nor_bert_optim = AdamW(get_optimizer_grouped_param(nor_bert_model), lr=5e-5)
+    nor_bert_optim = AdamW(get_optimizer_grouped_param(nor_bert_model), lr=1e-5)
     tune(nor_bert_model, nor_bert_optim, nor_bert_train_dataset, nor_bert_test_dataset)
     nor_bert_f1, nor_bert_accuracy = eval(nor_bert_model, nor_bert_test_dataset)
+    torch.cuda.empty_cache()
 
     nb_bert_model = nb_bert_pipe.model
     nb_bert_model.to(device)
@@ -195,14 +203,15 @@ def run():
     nb_bert_optim = AdamW(get_optimizer_grouped_param(nb_bert_model), lr=1e-5)
     tune(nb_bert_model, nb_bert_optim, nb_bert_train_dataset, nb_bert_test_dataset)
     nb_bert_f1, nb_bert_accuracy = eval(nb_bert_model, nb_bert_test_dataset)
+    torch.cuda.empty_cache()
 
     mbert_model = mbert_pipe.model
     mbert_model.to(device)
-    mbert_optim = AdamW(get_optimizer_grouped_param(mbert_model), lr=5e-5)
+    mbert_optim = AdamW(get_optimizer_grouped_param(mbert_model), lr=1e-5)
     tune(mbert_model, mbert_optim, mbert_train_dataset, mbert_test_dataset)
     mbert_f1, mbert_accuracy = eval(mbert_model, mbert_test_dataset)
 
-    with open('./results/dialect_classification.txt', 'w') as file:
+    with open('./results/dialect_classification.txt', 'a') as file:
         file.write('NorBert - F1 score: ' + str(nor_bert_f1) + ' Accuracy: ' + str(nor_bert_accuracy) + '\n')
         file.write('NbBert - F1 score: ' + str(nb_bert_f1) + ' Accuracy: ' + str(nb_bert_accuracy) + '\n')
         file.write('mBert - F1 score: ' + str(mbert_f1) + ' Accuracy: ' + str(mbert_accuracy) + '\n')
